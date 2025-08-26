@@ -5,10 +5,7 @@
 #include <d3dcompiler.h>
 #include <comdef.h>
 #include <algorithm>
-#include <comdef.h>
 #include "app.h"
-#include <sec_api/string_s.h>
-
 #include <chrono>
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
@@ -153,6 +150,7 @@ void App::Run() {
 
         UINT stride = sizeof(Vertex);
         UINT offset = 0;
+
         pImmediateContext->IASetVertexBuffers(0, 1, &g_pVertexBuffer, &stride, &offset);
         pImmediateContext->IASetInputLayout(g_pVertexLayout);
         pImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -163,7 +161,10 @@ void App::Run() {
         pImmediateContext->DrawIndexed(6, 0, 0);
 
 
-        pSwapChain->Present(1, 0);
+        if (const HRESULT hr = pSwapChain->Present(1, 0); FAILED(hr)) {
+            MessageBoxW(nullptr, L"Error presenting swap chain", L"Error", MB_ICONERROR);
+            continue;
+        }
 
         frameCount++;
         auto currentTime = std::chrono::high_resolution_clock::now();
@@ -198,6 +199,7 @@ BOOL App::InitDirect3D(HWND hWnd) {
         D3D_FEATURE_LEVEL_10_0
     };
     D3D_FEATURE_LEVEL obtained{};
+
 
     UINT flags = 0;
 #if defined(_DEBUG)
@@ -358,7 +360,7 @@ BOOL App::CreateRenderTarget() {
     return true;
 }
 
-void App::Resize(UINT width, UINT height) {
+void App::Resize(const UINT width, const UINT height) {
     if (!pSwapChain) return;
 
     pImmediateContext->OMSetRenderTargets(0, nullptr, nullptr);
@@ -367,14 +369,17 @@ void App::Resize(UINT width, UINT height) {
         g_pRenderTargetView = nullptr;
     }
 
-    pSwapChain->ResizeBuffers(0, width, height, DXGI_FORMAT_UNKNOWN, 0);
+    if (const HRESULT hr = pSwapChain->ResizeBuffers(0, width, height, DXGI_FORMAT_UNKNOWN, 0); FAILED(hr)) {
+        const _com_error err(hr);
+        MessageBoxW(nullptr,err.ErrorMessage(),L"Failed to resize swap chain",MB_ICONERROR);
+    }
     CreateRenderTarget();
 
     D3D11_VIEWPORT vp{};
     vp.TopLeftX = 0;
     vp.TopLeftY = 0;
-    vp.Width = static_cast<FLOAT>(std::max(width, 1u));
-    vp.Height = static_cast<FLOAT>(std::max(height, 1u));
+    vp.Width = static_cast<FLOAT>(max(width, 1u));
+    vp.Height = static_cast<FLOAT>(max(height, 1u));
     vp.MinDepth = 0.0f;
     vp.MaxDepth = 1.0f;
     pImmediateContext->RSSetViewports(1, &vp);
