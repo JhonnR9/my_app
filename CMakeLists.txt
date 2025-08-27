@@ -12,6 +12,9 @@ add_definitions(-DUNICODE -D_UNICODE)
 add_executable(my_app
         src/main.cpp
         src/app.cpp
+        src/scenes/my_scene.cpp
+        src/scenes/my_scene.h
+        src/systems/system.h
 )
 
 add_subdirectory(external/DirectXTK)

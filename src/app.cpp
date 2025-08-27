@@ -1,6 +1,3 @@
-//
-// Created by jhone on 8/26/2025.
-//
 
 #include <d3dcompiler.h>
 #include <comdef.h>
@@ -11,6 +8,8 @@
 #include <PrimitiveBatch.h>
 #include <VertexTypes.h>
 #include <WICTextureLoader.h>
+
+#include "scenes/my_scene.h"
 
 using namespace DirectX;
 
@@ -40,6 +39,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 App::App() {
     wcscpy_s(szTitle, L"My App");
     wcscpy_s(szWindowClass, L"D3D11WindowClass");
+    pRegistry = std::make_unique<entt::registry>();
+    pScene = std::make_unique<MyScene>(pRegistry.get());
 }
 
 ATOM App::InitWindowClass(HINSTANCE hInstance) {
@@ -127,7 +128,7 @@ void App::Run() {
         if (!pImmediateContext || !pRenderTargetView) continue;
 
         Draw();
-        if (const HRESULT hr = pSwapChain->Present(1, 0); FAILED(hr)) {
+        if (const HRESULT hr = pSwapChain->Present(useVsync, 0); FAILED(hr)) {
             MessageBoxW(nullptr, L"Error presenting swap chain", L"Error", MB_ICONERROR);
             break;
         }
@@ -154,14 +155,14 @@ void App::Draw() {
     pImmediateContext->ClearRenderTargetView(pRenderTargetView.Get(), clearColor);
 
     pImmediateContext->OMSetRenderTargets(1, pRenderTargetView.GetAddressOf(), nullptr);
-    basicEffect->Apply(pImmediateContext.Get());
-    pImmediateContext->IASetInputLayout(inputLayout.Get());
+    pBasicEffect->Apply(pImmediateContext.Get());
+    pImmediateContext->IASetInputLayout(pInputLayout.Get());
 
-    spriteBatch->Begin();
+    pSpriteBatch->Begin();
 
-    spriteBatch->Draw(spriteTexture.Get(), XMFLOAT2(100, 100));
+    pSpriteBatch->Draw(pSpriteTexture.Get(), XMFLOAT2(100, 100));
 
-    spriteBatch->End();
+    pSpriteBatch->End();
 }
 
 BOOL App::InitDirect3D(HWND hWnd) {
@@ -205,28 +206,28 @@ BOOL App::InitDirect3D(HWND hWnd) {
     const D3D11_VIEWPORT vp = CreateViewport(Width, Height);
     pImmediateContext->RSSetViewports(1, &vp);
 
-    states = std::make_unique<CommonStates>(pd3dDevice.Get());
+    pStates = std::make_unique<CommonStates>(pd3dDevice.Get());
 
-    basicEffect = std::make_unique<BasicEffect>(pd3dDevice.Get());
-    basicEffect->SetVertexColorEnabled(true);
+    pBasicEffect = std::make_unique<BasicEffect>(pd3dDevice.Get());
+    pBasicEffect->SetVertexColorEnabled(true);
 
     void const *shaderByteCode;
     size_t byteCodeLength;
-    basicEffect->GetVertexShaderBytecode(&shaderByteCode, &byteCodeLength);
+    pBasicEffect->GetVertexShaderBytecode(&shaderByteCode, &byteCodeLength);
 
     pd3dDevice->CreateInputLayout(VertexPositionColor::InputElements,
                                   VertexPositionColor::InputElementCount,
                                   shaderByteCode, byteCodeLength,
-                                  &inputLayout);
+                                  &pInputLayout);
 
-    spriteBatch = std::make_unique<DirectX::SpriteBatch>(pImmediateContext.Get());
+    pSpriteBatch = std::make_unique<DirectX::SpriteBatch>(pImmediateContext.Get());
 
     hr = CreateWICTextureFromFile(
         pd3dDevice.Get(),
         pImmediateContext.Get(),
-        L"resources/sprite.jpg",
+        L"resources/enemy2.png",
         nullptr,
-        &spriteTexture
+        &pSpriteTexture
     );
 
     if (FAILED(hr)) {
