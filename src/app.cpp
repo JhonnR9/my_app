@@ -211,6 +211,10 @@ BOOL App::InitDirect3D(HWND hWnd) {
     pBasicEffect = std::make_unique<BasicEffect>(pd3dDevice.Get());
     pBasicEffect->SetVertexColorEnabled(true);
 
+    pRegistry->ctx().emplace<ComPtr<ID3D11Device>>(pd3dDevice);
+    pRegistry->ctx().emplace<ComPtr<ID3D11DeviceContext>>(pImmediateContext);
+
+
     void const *shaderByteCode;
     size_t byteCodeLength;
     pBasicEffect->GetVertexShaderBytecode(&shaderByteCode, &byteCodeLength);

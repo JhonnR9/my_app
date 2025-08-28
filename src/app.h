@@ -47,7 +47,7 @@ private:
     std::unique_ptr<DirectX::BasicEffect> pBasicEffect;
     std::unique_ptr<DirectX::SpriteBatch> pSpriteBatch;
     ComPtr<ID3D11InputLayout> pInputLayout;
-    ComPtr<ID3D11ShaderResourceView> pSpriteTexture;
+    Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> pSpriteTexture;
 
 
 

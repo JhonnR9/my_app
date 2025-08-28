@@ -15,6 +15,11 @@ add_executable(my_app
         src/scenes/my_scene.cpp
         src/scenes/my_scene.h
         src/systems/system.h
+        src/systems/render_system.cpp
+        src/systems/render_system.h
+)
+target_include_directories(my_app PRIVATE
+        src/
 )
 
 add_subdirectory(external/DirectXTK)
